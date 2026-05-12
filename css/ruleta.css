@@ -1,0 +1,16 @@
+/* Estilos específicos para la Ruleta */
+#ruleta-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    position: relative;
+}
+
+/* Espacio para que David agregue sus estilos de Canvas/SVG */
+canvas#ruleta-canvas {
+    max-width: 100%;
+    height: auto;
+    border-radius: 50%;
+    box-shadow: var(--shadow-lg);
+}

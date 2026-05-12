@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica 2 - UNCP | Ruleta y Sorteo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ruleta.css">
+    <link rel="stylesheet" href="css/sorteo.css">
+</head>
+<body>
+    <header class="main-header">
+        <h1>Práctica 2: Sistema de Ruleta y Sorteo</h1>
+        <nav>
+            <a href="#ruleta-section">Ruleta</a>
+            <a href="#sorteo-section">Sorteo de Equipos</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Sección de la Ruleta (David & Erick) -->
+        <section id="ruleta-section" class="card">
+            <h2>Ruleta de Participantes</h2>
+            <div id="ruleta-container">
+                <!-- Aquí se dibujará la ruleta dinámicamente -->
+                <div class="placeholder-content">Contenedor de Ruleta listo para desarrollo</div>
+            </div>
+            <div id="respuesta" class="resultado-box">
+                <span class="label">RESPUESTA:</span>
+                <span id="resultado-valor">-</span>
+            </div>
+        </section>
+
+        <!-- Sección de Sorteo de Equipos (Lesly & Benjamin) -->
+        <section id="sorteo-section" class="card">
+            <h2>Sorteo de Equipos</h2>
+            <div id="sorteo-container">
+                <!-- Aquí se cargará la interfaz de sorteo -->
+                <div class="placeholder-content">Contenedor de Sorteo listo para desarrollo</div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <p>&copy; 2026 Facultad de Ingeniería - UNCP</p>
+    </footer>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
