@@ -1,4 +1,45 @@
 /* Estilos específicos para la Ruleta */
+
+.ruleta-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .ruleta-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ruleta-panel-izq textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--border-radius);
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.2s;
+}
+
+.ruleta-panel-izq textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.atajos-ayuda {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    background: #f1f5f9;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-color);
+}
+
 #ruleta-container {
     display: flex;
     justify-content: center;

@@ -4,221 +4,172 @@
  * Funcionalidades: Algoritmo de generación aleatoria y exportación.
  */
 
-/**
- * F3: Generar equipos aleatoriamente
- * @param {Array} participantes - Lista de nombres
- * @param {number} valor - Número (equipos o participantes por equipo)
- * @param {string} tipo - 'cantidad-equipos' o 'participantes-equipo'
- * @returns {Array} Array de equipos, cada equipo es un array de participantes
- */
-export function generarEquiposAleatorios(participantes, valor, tipo) {
-    if (!participantes || participantes.length === 0) {
-        return [];
-    }
+let ultimosEquipos = [];
+let ultimoTitulo = "";
+
+export function generarEquiposAleatorios(participantes, cantidad, tipo, titulo) {
+    const container = document.getElementById('sorteo-container');
+    container.innerHTML = ''; // Limpiar resultados anteriores
     
-    // Mezclar participantes (Fisher-Yates)
-    const mezclados = [...participantes];
+    // Algoritmo Fisher-Yates para mezclar aleatoriamente
+    let mezclados = [...participantes];
     for (let i = mezclados.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [mezclados[i], mezclados[j]] = [mezclados[j], mezclados[i]];
     }
-    
-    let numEquipos;
-    
-    if (tipo === 'cantidad-equipos') {
-        numEquipos = valor;
-    } else {
-        // tipo === 'participantes-equipo'
-        numEquipos = Math.ceil(mezclados.length / valor);
-    }
-    
-    // Distribuir en equipos
-    const equipos = Array(numEquipos).fill().map(() => []);
-    mezclados.forEach((participante, index) => {
-        equipos[index % numEquipos].push(participante);
-    });
-    
-    return equipos.filter(equipo => equipo.length > 0);
-}
 
-/**
- * F3: Mostrar animación uno a uno en la segunda pantalla
- * @param {Array} equipos - Array de equipos
- * @param {string} titulo - Título del sorteo
- * @param {HTMLElement} contenedor - Donde se mostrará (sorteo-container)
- */
-export async function mostrarAnimacionEquipos(equipos, titulo, contenedor) {
-    // Limpiar el contenedor y crear vista de resultados
-    contenedor.innerHTML = '';
+    let equipos = [];
     
-    // Contenedor principal de resultados
-    const resultadosDiv = document.createElement('div');
-    resultadosDiv.id = 'resultados-sorteo-view';
-    
-    // Título del sorteo
-    if (titulo) {
-        const tituloElem = document.createElement('h3');
-        tituloElem.textContent = titulo;
-        tituloElem.style.cssText = 'text-align: center; margin-bottom: 1.5rem; color: #1e293b;';
-        resultadosDiv.appendChild(tituloElem);
-    }
-    
-    // Grid para equipos
-    const equiposGrid = document.createElement('div');
-    equiposGrid.className = 'sorteo-grid';
-    resultadosDiv.appendChild(equiposGrid);
-    
-    // Crear rectángulos para cada equipo (vacíos inicialmente)
-    const equiposData = [];
-    for (let i = 0; i < equipos.length; i++) {
-        const equipoCard = document.createElement('div');
-        equipoCard.className = 'equipo-card';
-        equipoCard.innerHTML = `
-            <h3 style="color: #2563eb; margin-bottom: 0.75rem;">Equipo ${i + 1}</h3>
-            <ul class="participantes-lista" style="list-style: none; padding: 0; margin: 0;"></ul>
-        `;
-        equiposGrid.appendChild(equipoCard);
-        equiposData.push({
-            card: equipoCard,
-            lista: equipoCard.querySelector('.participantes-lista')
+    // Lógica de división
+    if (tipo === 'cantidad_equipos') {
+        const numEquipos = Math.min(cantidad, mezclados.length);
+        for(let i=0; i<numEquipos; i++) equipos.push([]);
+        mezclados.forEach((p, idx) => {
+            equipos[idx % numEquipos].push(p);
         });
-    }
-    
-    contenedor.appendChild(resultadosDiv);
-    
-    // *** ANIMACIÓN UNO A UNO (F3) ***
-    for (let i = 0; i < equipos.length; i++) {
-        const equipo = equipos[i];
-        const { lista } = equiposData[i];
-        
-        for (const participante of equipo) {
-            const li = document.createElement('li');
-            li.textContent = participante;
-            li.style.cssText = 'padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;';
-            lista.appendChild(li);
-            await delay(300); // 300ms entre cada persona
+    } else {
+        // participantes_equipo
+        const tamano = cantidad;
+        for (let i = 0; i < mezclados.length; i += tamano) {
+            equipos.push(mezclados.slice(i, i + tamano));
         }
     }
-    
-    // Agregar los 3 botones de exportación (F4)
-    agregarBotonesExportacion(resultadosDiv, equipos, titulo);
-    
-    // Scroll hacia los resultados
-    contenedor.scrollIntoView({ behavior: 'smooth' });
-}
 
-/**
- * F4: Agregar los 3 botones de exportación
- */
-function agregarBotonesExportacion(contenedor, equipos, titulo) {
-    const divBotones = document.createElement('div');
-    divBotones.style.cssText = 'display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;';
-    
-    // Botón 1: Descargar JPG
-    const btnJPG = document.createElement('button');
-    btnJPG.textContent = '📸 Descargar JPG';
-    btnJPG.style.cssText = 'padding: 0.75rem 1.5rem; background: #dc2626; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;';
-    btnJPG.onclick = () => exportarAImagen(contenedor, titulo, equipos);
-    
-    // Botón 2: Copiar al portapapeles
-    const btnCopiar = document.createElement('button');
-    btnCopiar.textContent = '📋 Copiar al portapapeles';
-    btnCopiar.style.cssText = 'padding: 0.75rem 1.5rem; background: #16a34a; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;';
-    btnCopiar.onclick = () => copiarResultadosPortapapeles(equipos, titulo);
-    
-    // Botón 3: Copiar por columnas
-    const btnColumnas = document.createElement('button');
-    btnColumnas.textContent = '📊 Copiar por columnas';
-    btnColumnas.style.cssText = 'padding: 0.75rem 1.5rem; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;';
-    btnColumnas.onclick = () => copiarPorColumnas(equipos);
-    
-    divBotones.appendChild(btnJPG);
-    divBotones.appendChild(btnCopiar);
-    divBotones.appendChild(btnColumnas);
-    
-    contenedor.appendChild(divBotones);
-}
+    ultimosEquipos = equipos;
+    ultimoTitulo = titulo || "Sorteo de Equipos";
 
-/**
- * F4: Exportar a JPG (usando Canvas API nativa)
- */
-export function exportarAImagen(elemento, titulo, equipos) {
-    // Como no se pueden usar librerías externas, ofrecemos alternativa
-    const confirmar = confirm(
-        'Para descargar como JPG sin librerías externas:\n\n' +
-        '1. Toma una captura de pantalla (Windows: Win+Shift+S / Mac: Cmd+Shift+4)\n' +
-        '2. O usa la opción "Copiar al portapapeles" para guardar el texto\n\n' +
-        '¿Quieres copiar los resultados al portapapeles como alternativa?'
-    );
-    
-    if (confirmar) {
-        copiarResultadosPortapapeles(equipos, titulo);
-    }
-}
+    // Renderizar UI con animaciones
+    const tituloEl = document.createElement('h3');
+    tituloEl.textContent = ultimoTitulo;
+    tituloEl.className = 'resultado-titulo';
+    container.appendChild(tituloEl);
 
-/**
- * F4: Copiar resultados al portapapeles (formato legible)
- */
-export function copiarResultadosPortapapeles(equipos, titulo) {
-    const texto = formatearEquiposTexto(equipos, titulo);
-    copiarAlPortapapeles(texto);
-    alert('¡Resultados copiados al portapapeles!');
-}
+    const grid = document.createElement('div');
+    grid.className = 'sorteo-grid';
+    container.appendChild(grid);
 
-/**
- * F4: Copiar equipos en columnas separadas
- */
-export function copiarPorColumnas(equipos) {
-    let texto = '';
-    equipos.forEach((equipo, index) => {
-        texto += `Equipo ${index + 1}: ${equipo.join(', ')}\n`;
+    equipos.forEach((equipo, i) => {
+        const card = document.createElement('div');
+        card.className = 'equipo-card';
+        card.innerHTML = `<h4 class="equipo-titulo">Equipo ${i+1}</h4><ul class="equipo-lista"></ul>`;
+        grid.appendChild(card);
+        
+        const ul = card.querySelector('ul');
+        
+        // Animación uno a uno usando setTimeout
+        equipo.forEach((miembro, j) => {
+            setTimeout(() => {
+                const li = document.createElement('li');
+                li.textContent = miembro;
+                li.className = 'animar-entrada';
+                ul.appendChild(li);
+            }, (i * 300) + (j * 400)); // Delay escalonado
+        });
     });
-    copiarAlPortapapeles(texto);
-    alert('¡Equipos copiados por columnas!');
+
+    // Habilitar botones de exportación cuando empiece la animación
+    setTimeout(() => {
+        document.getElementById('btn-export-jpg').disabled = false;
+        document.getElementById('btn-export-clipboard').disabled = false;
+    }, 500);
 }
 
-/**
- * Helper: Copiar texto al portapapeles
- */
-export function copiarAlPortapapeles(texto) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(texto).catch(() => copiarAlternativo(texto));
-    } else {
-        copiarAlternativo(texto);
-    }
+export function exportarAImagen() {
+    if(ultimosEquipos.length === 0) return;
+    
+    // Crear un canvas nativo para exportar la imagen
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Dimensiones de la imagen
+    const columnas = Math.min(3, ultimosEquipos.length);
+    const filas = Math.ceil(ultimosEquipos.length / columnas);
+    const anchoCard = 300;
+    const altoLinea = 30;
+    
+    // Determinar la altura de la tarjeta más alta
+    let maxIntegrantes = 0;
+    ultimosEquipos.forEach(eq => { if(eq.length > maxIntegrantes) maxIntegrantes = eq.length; });
+    const altoCard = 70 + (maxIntegrantes * altoLinea);
+    
+    canvas.width = (anchoCard * columnas) + ((columnas+1) * 30);
+    canvas.height = 100 + (altoCard * filas) + ((filas+1) * 30);
+    
+    // Dibujar Fondo
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Dibujar Título Principal
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 32px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(ultimoTitulo, canvas.width / 2, 60);
+    
+    // Dibujar Equipos
+    ctx.textAlign = 'left';
+    ultimosEquipos.forEach((equipo, i) => {
+        const col = i % columnas;
+        const fil = Math.floor(i / columnas);
+        
+        const x = 30 + (col * (anchoCard + 30));
+        const y = 100 + (fil * (altoCard + 30));
+        
+        // Fondo de tarjeta
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = 'rgba(0,0,0,0.1)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 4;
+        ctx.fillRect(x, y, anchoCard, altoCard);
+        
+        // Reset shadow
+        ctx.shadowColor = 'transparent';
+        
+        // Borde superior decorativo
+        ctx.fillStyle = '#6366f1';
+        ctx.fillRect(x, y, anchoCard, 6);
+        
+        // Título del Equipo
+        ctx.fillStyle = '#6366f1';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText(`Equipo ${i+1}`, x + 20, y + 45);
+        
+        // Integrantes
+        ctx.fillStyle = '#334155';
+        ctx.font = '18px sans-serif';
+        equipo.forEach((miembro, j) => {
+            let txt = miembro.length > 25 ? miembro.substring(0, 22) + '...' : miembro;
+            ctx.fillText(`• ${txt}`, x + 20, y + 85 + (j * altoLinea));
+        });
+    });
+    
+    // Trigger Descarga
+    const link = document.createElement('a');
+    link.download = 'sorteo_equipos.jpg';
+    link.href = canvas.toDataURL('image/jpeg', 1.0);
+    link.click();
 }
 
-/**
- * Helper: Formatear equipos como texto
- */
-function formatearEquiposTexto(equipos, titulo) {
-    let texto = titulo ? `${titulo}\n${'='.repeat(40)}\n\n` : '';
-    equipos.forEach((equipo, index) => {
-        texto += `🔹 EQUIPO ${index + 1} 🔹\n`;
-        texto += `${'-'.repeat(25)}\n`;
-        equipo.forEach((p, i) => {
-            texto += `${i + 1}. ${p}\n`;
+export function copiarAlPortapapeles() {
+    if(ultimosEquipos.length === 0) return;
+    
+    let texto = `🌟 ${ultimoTitulo.toUpperCase()} 🌟\n\n`;
+    ultimosEquipos.forEach((equipo, i) => {
+        texto += `=== EQUIPO ${i+1} ===\n`;
+        equipo.forEach(miembro => {
+            texto += `- ${miembro}\n`;
         });
         texto += '\n';
     });
-    return texto;
+    
+    navigator.clipboard.writeText(texto).then(() => {
+        alert("¡Resultados copiados al portapapeles exitosamente!");
+    }).catch(err => {
+        alert("Error al copiar: " + err);
+    });
 }
 
-/**
- * Helper: Copia alternativa (fallback)
- */
-function copiarAlternativo(texto) {
-    const textarea = document.createElement('textarea');
-    textarea.value = texto;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-}
-
-/**
- * Helper: Delay para animación
- */
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+// Asignar los eventos de exportación al cargar
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('btn-export-jpg')?.addEventListener('click', exportarAImagen);
+    document.getElementById('btn-export-clipboard')?.addEventListener('click', copiarAlPortapapeles);
+});

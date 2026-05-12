@@ -24,22 +24,60 @@
         <!-- Sección de la Ruleta (David & Erick) -->
         <section id="ruleta-section" class="card">
             <h2>Ruleta de Participantes</h2>
-            <div id="ruleta-container">
-                <!-- Aquí se dibujará la ruleta dinámicamente -->
-                <div class="placeholder-content">Contenedor de Ruleta listo para desarrollo</div>
-            </div>
-            <div id="respuesta" class="resultado-box">
-                <span class="label">RESPUESTA:</span>
-                <span id="resultado-valor">-</span>
+            <div class="ruleta-grid">
+                <div class="ruleta-panel-izq">
+                    <textarea id="ruleta-textarea" placeholder="Ingresa los nombres aquí (uno por línea)..." rows="15"></textarea>
+                    <p class="atajos-ayuda">Atajos: <strong>[Espacio]</strong> Girar | <strong>[S]</strong> Quitar ganador | <strong>[R]</strong> Reiniciar | <strong>[F]</strong> Pantalla completa</p>
+                </div>
+                <div class="ruleta-panel-der">
+                    <div id="ruleta-container">
+                        <!-- Aquí se dibujará la ruleta dinámicamente -->
+                    </div>
+                    <div id="respuesta" class="resultado-box">
+                        <span class="label">RESPUESTA:</span>
+                        <span id="resultado-valor">-</span>
+                    </div>
+                </div>
             </div>
         </section>
 
         <!-- Sección de Sorteo de Equipos (Lesly & Benjamin) -->
         <section id="sorteo-section" class="card">
             <h2>Sorteo de Equipos</h2>
-            <div id="sorteo-container">
-                <!-- Aquí se cargará la interfaz de sorteo -->
-                <div class="placeholder-content">Contenedor de Sorteo listo para desarrollo</div>
+            <div id="sorteo-ui-container" class="sorteo-grid-ui">
+                <div class="sorteo-form">
+                    <label>Título del Sorteo:</label>
+                    <input type="text" id="sorteo-titulo" placeholder="Ej. Torneo de Programación">
+                    
+                    <label>Participantes (máx 100, 50 chars c/u):</label>
+                    <textarea id="sorteo-textarea" placeholder="Ingresa los participantes (uno por línea)..." rows="10"></textarea>
+                    <span id="sorteo-contador" class="contador-texto">0 / 100</span>
+
+                    <div class="sorteo-controles">
+                        <select id="sorteo-tipo-division">
+                            <option value="cantidad_equipos">Cantidad de Equipos</option>
+                            <option value="participantes_equipo">Participantes por Equipo</option>
+                        </select>
+                        <input type="number" id="sorteo-cantidad" min="1" value="2">
+                    </div>
+
+                    <div class="sorteo-botones">
+                        <button id="btn-sortear" class="btn btn-primary">Sortear Equipos</button>
+                        <button id="btn-limpiar" class="btn btn-secondary">Limpiar</button>
+                    </div>
+                    <p id="sorteo-error" class="error-msg"></p>
+                </div>
+
+                <div class="sorteo-resultados-panel">
+                    <div class="export-controles">
+                        <button id="btn-export-jpg" class="btn btn-outline" disabled>Descargar JPG</button>
+                        <button id="btn-export-clipboard" class="btn btn-outline" disabled>Copiar Texto</button>
+                    </div>
+                    <div id="sorteo-container">
+                        <!-- Aquí se cargarán los equipos -->
+                        <div class="placeholder-content">Los resultados aparecerán aquí</div>
+                    </div>
+                </div>
             </div>
         </section>
     </main>

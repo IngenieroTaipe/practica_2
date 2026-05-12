@@ -1,155 +1,74 @@
 /**
  * Módulo: storage.js
  * Responsable: Barja Ortiz Erick Gerson
- * Funcionalidades: Gestión del TextArea de la ruleta, localStorage, sincronización automática y atajos de teclado.
+ * Funcionalidades: Gestión de localStorage, sincronización y teclas especiales.
  */
+import { dibujarRuleta } from './ruleta.js';
 
-const CLAVE_TEXTAREA = 'ruleta_participantes';
-let sectoresOcultos = new Set();
+export function inicializarStorage() {
+    const textArea = document.getElementById('ruleta-textarea');
+    if (!textArea) return;
 
-/**
- * Guarda datos en localStorage
- */
-export function guardarEnAlmacenamiento(clave, datos) {
-    localStorage.setItem(clave, JSON.stringify(datos));
-    console.log(`Datos guardados en ${clave}`);
-}
-
-/**
- * Obtiene datos del localStorage
- */
-export function obtenerDeAlmacenamiento(clave) {
-    const datos = localStorage.getItem(clave);
-    return datos ? JSON.parse(datos) : null;
-}
-
-/**
- * Inicializa el TextArea de la ruleta con sincronización automática
- */
-export function inicializarTextAreaRuleta(containerId, callbackActualizar) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    // Crear TextArea
-    const textArea = document.createElement('textarea');
-    textArea.id = 'textarea-ruleta';
-    textArea.placeholder = 'Ingresa los participantes, uno por línea (máx 100, 50 chars c/u)';
-    textArea.rows = 10;
-    textArea.cols = 50;
-    textArea.style.marginBottom = '20px';
-    container.appendChild(textArea);
-
-    // Recuperar datos guardados
-    const datosGuardados = obtenerDeAlmacenamiento(CLAVE_TEXTAREA);
+    // Cargar datos previos o por defecto
+    const datosGuardados = localStorage.getItem('ruleta_participantes');
     if (datosGuardados) {
         textArea.value = datosGuardados;
+    } else {
+        textArea.value = "Ana\nCarlos\nDavid\nLesly\nErick";
     }
 
-    // Sincronización automática: al escribir, se guarda y se actualiza la ruleta
-    textArea.addEventListener('input', () => {
-        guardarEnAlmacenamiento(CLAVE_TEXTAREA, textArea.value);
-        const sectores = textArea.value
-            .split('\n')
-            .map(s => s.trim())
-            .filter(s => s !== '' && !sectoresOcultos.has(s));
-        if (callbackActualizar) {
-            callbackActualizar(sectores);
-        }
+    // Dibujar inicial
+    actualizarRuletaDesdeTexto();
+
+    // Evento de escritura
+    textArea.addEventListener('input', (e) => {
+        localStorage.setItem('ruleta_participantes', e.target.value);
+        actualizarRuletaDesdeTexto();
     });
 
-    // Atajos de teclado
-    document.addEventListener('keydown', (evento) => {
-        manejarTeclasEspeciales(evento, textArea, callbackActualizar);
-    });
+    // Teclas especiales globales
+    window.addEventListener('keydown', manejarTeclasEspeciales);
+}
 
-    // Actualizar ruleta inicial si hay datos
-    if (datosGuardados) {
-        const sectores = datosGuardados
-            .split('\n')
-            .map(s => s.trim())
-            .filter(s => s !== '' && !sectoresOcultos.has(s));
-        if (callbackActualizar) {
-            callbackActualizar(sectores);
+function actualizarRuletaDesdeTexto() {
+    const textArea = document.getElementById('ruleta-textarea');
+    if (!textArea) return;
+    const lineas = textArea.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    dibujarRuleta('ruleta-container', lineas);
+}
+
+function manejarTeclasEspeciales(e) {
+    // Evitar interferencia cuando se escribe en inputs de sorteo
+    if (document.activeElement.id === 'sorteo-textarea' || 
+        document.activeElement.id === 'sorteo-titulo' || 
+        document.activeElement.id === 'sorteo-cantidad') {
+        return;
+    }
+
+    const tecla = e.key.toLowerCase();
+    const escribiendoRuleta = document.activeElement.id === 'ruleta-textarea';
+
+    // Tecla F: Pantalla completa (siempre permitida)
+    if (tecla === 'f' && !e.ctrlKey && !e.metaKey) {
+        if (!escribiendoRuleta) { // Si esta escribiendo una F, no la bloqueamos
+            e.preventDefault();
+            alternarPantallaCompleta();
+        }
+    }
+
+    // Teclas R y S (solo si no estamos escribiendo dentro del textarea para no evitar teclear esas letras)
+    if (!escribiendoRuleta) {
+        if (tecla === 'r') {
+            e.preventDefault();
+            reiniciarRuleta();
+        } else if (tecla === 's') {
+            e.preventDefault();
+            quitarGanador();
         }
     }
 }
 
-/**
- * Sincroniza un TextArea con callback
- */
-export function sincronizarTextArea(idTextArea, callback) {
-    const textArea = document.getElementById(idTextArea);
-    if (textArea) {
-        textArea.addEventListener('input', (e) => {
-            callback(e.target.value);
-        });
-    }
-}
-
-/**
- * Manejo de atajos de teclado: S (marcar gris), R (reiniciar), F (pantalla completa)
- */
-export function manejarTeclasEspeciales(evento, textArea, callbackActualizar) {
-    const tecla = evento.key.toLowerCase();
-
-    if (tecla === 's') {
-        evento.preventDefault();
-        marcarYOcultar(textArea, callbackActualizar);
-    } else if (tecla === 'r') {
-        evento.preventDefault();
-        reiniciar(textArea, callbackActualizar);
-    } else if (tecla === 'f') {
-        evento.preventDefault();
-        togglePantallaCompleta();
-    }
-}
-
-/**
- * Marca un sector como gris (oculto) - Tecla S
- */
-function marcarYOcultar(textArea, callbackActualizar) {
-    const resultadoEl = document.getElementById('resultado-valor');
-    if (resultadoEl && resultadoEl.textContent !== '-') {
-        const sector = resultadoEl.textContent.trim();
-        if (!sectoresOcultos.has(sector)) {
-            sectoresOcultos.add(sector);
-            // Actualizar ruleta sin el sector oculto
-            const sectoresActuales = textArea.value
-                .split('\n')
-                .map(s => s.trim())
-                .filter(s => s !== '' && !sectoresOcultos.has(s));
-            if (callbackActualizar) {
-                callbackActualizar(sectoresActuales);
-            }
-            console.log(`Sector "${sector}" marcado como oculto`);
-        }
-    }
-}
-
-/**
- * Reinicia la ruleta limpiando todo - Tecla R
- */
-function reiniciar(textArea, callbackActualizar) {
-    if (textArea) {
-        textArea.value = '';
-        guardarEnAlmacenamiento(CLAVE_TEXTAREA, '');
-        sectoresOcultos.clear();
-        if (callbackActualizar) {
-            callbackActualizar([]);
-        }
-        // Limpiar resultado
-        const resultadoEl = document.getElementById('resultado-valor');
-        if (resultadoEl) {
-            resultadoEl.textContent = '-';
-        }
-        console.log("Ruleta reiniciada");
-    }
-}
-
-/**
- * Toggle de pantalla completa - Tecla F
- */
-function togglePantallaCompleta() {
+function alternarPantallaCompleta() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
             console.log(`Error al intentar pantalla completa: ${err.message}`);
@@ -159,16 +78,36 @@ function togglePantallaCompleta() {
     }
 }
 
-/**
- * Obtiene sectores ocultos actuales
- */
-export function obtenerSectoresOcultos() {
-    return new Set(sectoresOcultos);
+function reiniciarRuleta() {
+    const textArea = document.getElementById('ruleta-textarea');
+    if (textArea) {
+        if(confirm("¿Seguro que deseas reiniciar y borrar la lista de la ruleta?")) {
+            textArea.value = "";
+            localStorage.removeItem('ruleta_participantes');
+            actualizarRuletaDesdeTexto();
+            const el = document.getElementById('resultado-valor');
+            if (el) el.textContent = "-";
+        }
+    }
 }
 
-/**
- * Limpia los sectores ocultos
- */
-export function limpiarSectoresOcultos() {
-    sectoresOcultos.clear();
+function quitarGanador() {
+    const ganadorActual = document.getElementById('resultado-valor')?.textContent;
+    if (!ganadorActual || ganadorActual === "-" || ganadorActual === "Girando...") return;
+
+    const textArea = document.getElementById('ruleta-textarea');
+    if (textArea) {
+        let lineas = textArea.value.split('\n');
+        // Encontrar la primera coincidencia exacta (con trim)
+        const index = lineas.findIndex(l => l.trim() === ganadorActual);
+        if (index !== -1) {
+            lineas.splice(index, 1);
+            textArea.value = lineas.join('\n');
+            localStorage.setItem('ruleta_participantes', textArea.value);
+            actualizarRuletaDesdeTexto();
+            const el = document.getElementById('resultado-valor');
+            if (el) el.textContent = "-"; // Reset resultado
+            alert(`Participante '${ganadorActual}' retirado de la ruleta.`);
+        }
+    }
 }
