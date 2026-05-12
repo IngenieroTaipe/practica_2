@@ -3,14 +3,42 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 400px;
+    min-height: 420px;
     position: relative;
+    padding: 20px 0;
+}
+
+/* Flecha indicadora superior */
+.ruleta-pointer {
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-top: 30px solid var(--text-main);
+    z-index: 10;
+    filter: drop-shadow(0px 3px 3px rgba(0,0,0,0.4));
 }
 
 /* Espacio para que David agregue sus estilos de Canvas/SVG */
 canvas#ruleta-canvas {
     max-width: 100%;
-    height: auto;
+    width: 380px;
+    height: 380px;
     border-radius: 50%;
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-lg), 0 0 0 5px white;
+    cursor: pointer;
+    transition: box-shadow 0.3s ease;
+}
+
+canvas#ruleta-canvas:hover {
+    box-shadow: var(--shadow-lg), 0 0 0 5px white, 0 0 20px rgba(99, 102, 241, 0.5);
+}
+
+#resultado-valor {
+    display: inline-block;
+    transition: transform 0.3s ease, color 0.3s ease;
 }
